@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import filters, mixins, pagination, permissions, viewsets
+
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -42,11 +43,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         return post.comments.all()
 
 
-class FollowViewSet(viewsets.ModelViewSet):
+class ListCreateViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
+
+
+class FollowViewSet(ListCreateViewSet):
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('following__username',)
+    search_fields = ('=user__username', '=following__username',)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
